@@ -2,7 +2,7 @@ Introduction
 ============
 
 .. image:: https://readthedocs.org/projects/adafruit-circuitpython-lps2x/badge/?version=latest
-    :target: https://adafruit-circuitpython-lps2x.readthedocs.io/en/latest/
+    :target: https://circuitpython.readthedocs.io/projects/lps2x/en/latest/
     :alt: Documentation Status
 
 .. image:: https://img.shields.io/discord/327254708534116352.svg
