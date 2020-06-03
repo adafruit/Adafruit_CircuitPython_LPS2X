@@ -27,7 +27,7 @@ Table of Contents
 .. toctree::
     :caption: Related Products
 
-    * `LPS25HW Breakout <https://www.adafruit.com/products/4258>`_
+    * LPS25HW Breakout <https://www.adafruit.com/products/4258>
 
 .. toctree::
     :caption: Other Links
