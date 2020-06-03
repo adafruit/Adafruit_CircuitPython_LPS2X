@@ -144,7 +144,6 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
             raise RuntimeError(
                 "Failed to find LPS2X! Found chip ID 0x%x" % self._chip_id
             )
-
         self.reset()
         self.initialize()
         sleep(0.010)  # delay 10ms for first reading
@@ -174,8 +173,11 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     @property
     def temperature(self):
         """The current temperature measurement in degrees C"""
+
         raw_temperature = self._raw_temperature
-        return (raw_temperature / self._temp_scaling) + 42.5  # pylint:disable=no-member
+        return (
+            raw_temperature / self._temp_scaling  # pylint:disable=no-member
+        ) + self._temp_offset  # pylint:disable=no-member
 
     @property
     def data_rate(self):
@@ -222,10 +224,10 @@ class LPS25(LPS2X):
                 ("LPS25_RATE_25_HZ", 4, 25, None),
             )
         )
-
         super().__init__(i2c_bus, address, chip_id=_LPS25HB_CHIP_ID)
 
         self._temp_scaling = 480
+        self._temp_offset = 42.5
         # self._inc_spi_flag = 0x40
 
     def initialize(self):
@@ -249,9 +251,7 @@ class LPS22(LPS2X):
     _reset = RWBit(_LPS22_CTRL_REG2, 2)
     _data_rate = RWBits(3, _LPS22_CTRL_REG1, 4)
 
-    def __init__(
-        self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=_LPS22HB_CHIP_ID
-    ):
+    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS):
         # Only adding Class-appropriate rates
         Rate.add_values(
             (
@@ -264,12 +264,12 @@ class LPS22(LPS2X):
             )
         )
 
-        super().__init__(i2c_bus, address)
+        super().__init__(i2c_bus, address, chip_id=_LPS22HB_CHIP_ID)
         self._temp_scaling = 100
+        self._temp_offset = 0
 
     def initialize(self):
         """Configure the sensor with the default settings. For use after calling `reset()`"""
-        # self.enabled = True
         self.data_rate = Rate.LPS22_RATE_75_HZ  # pylint:disable=no-member
 
     # void configureInterrupt(bool activelow, bool opendrain, bool data_ready,
