@@ -56,28 +56,28 @@ _CTRL_REG2 = const(0x21)
 _PRESS_OUT_XL = const(0x28 | 0x80)  # | 0x80 to set auto increment on multi-byte read
 _TEMP_OUT_L = const(0x2B | 0x80)  # | 0x80 to set auto increment on multi-byte read
 
-_LPS25_CHIP_ID = 0xBD
-_LPS25_DEFAULT_ADDRESS = 0x5D
+_LPS25HB_CHIP_ID = 0xBD
+_LPS2X_DEFAULT_ADDRESS = 0x5D
 
-# define LPS2X_I2CADDR_DEFAULT 0x5D ///< LPS2X default i2c address
-# define LPS2X_WHOAMI 0x0F          ///< Chip ID register
+# _LPS2X_I2CADDR_DEFAULT = 0x5D # LPS2X default i2c address
+# _LPS2X_WHOAMI = 0x0F          # Chip ID register
 
-# define LPS22HB_CHIP_ID 0xB1   ///< LPS22 default device id from WHOAMI
-# define LPS22_THS_P_L_REG 0x0C ///< Pressure threshold value for int
-# define LPS22_CTRL_REG1 0x10   ///< First control register. Includes BD & ODR
-# define LPS22_CTRL_REG2 0x11   ///< Second control register. Includes SW Reset
-# define LPS22_CTRL_REG3 0x12 ///< Third control register. Includes interrupt polarity
+_LPS22HB_CHIP_ID = 0xB1  # LPS22 default device id from WHOAMI
+# _LPS22_THS_P_L_REG = 0x0C # Pressure threshold value for int
+# _LPS22_CTRL_REG1 = 0x10   # First control register. Includes BD & ODR
+# _LPS22_CTRL_REG2 = 0x11   # Second control register. Includes SW Reset
+# _LPS22_CTRL_REG3 = 0x12 # Third control register. Includes interrupt polarity
 
-# define LPS25HB_CHIP_ID 0xBD ///< LPS25HB default device id from WHOAMI
-# define LPS25_CTRL_REG1 0x20 ///< First control register. Includes BD & ODR
-# define LPS25_CTRL_REG2 0x21 ///< Second control register. Includes SW Reset
-# define LPS25_CTRL_REG3 0x22 ///< Third control register. Includes interrupt polarity
-# define LPS25_CTRL_REG4 0x23 ///< Fourth control register. Includes DRDY INT control
-# define LPS25_INTERRUPT_CFG 0x24 ///< Interrupt control register
-# define LPS25_THS_P_L_REG 0xB0   ///< Pressure threshold value for int
+# _LPS25HB_CHIP_ID = 0xBD # LPS25HB default device id from WHOAMI
+# _LPS25_CTRL_REG1 = 0x20 # First control register. Includes BD & ODR
+# _LPS25_CTRL_REG2 = 0x21 # Second control register. Includes SW Reset
+# _LPS25_CTRL_REG3 = 0x22 # Third control register. Includes interrupt polarity
+# _LPS25_CTRL_REG4 = 0x23 # Fourth control register. Includes DRDY INT control
+# _LPS25_INTERRUPT_CFG = 0x24 # Interrupt control register
+# _LPS25_THS_P_L_REG = 0xB0   # Pressure threshold value for int
 
-# define LPS2X_PRESS_OUT_XL(0x28 | 0x80) ///< | 0x80 to set auto increment on multi-byte read
-# define LPS2X_TEMP_OUT_L  (0x2B | 0x80) ///< | 0x80 to set auto increment on
+# _LPS2X_PRESS_OUT_XL =(# | 0x80) ///< | 0x80 to set auto increment on multi-byte read
+# _LPS2X_TEMP_OUT_L =  (0x2B # 0x80) ///< | 0x80 to set auto increment on
 
 
 class CV:
@@ -162,9 +162,9 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     _raw_temperature = ROUnaryStruct(_TEMP_OUT_L, "<h")
     _raw_pressure = ROBits(24, _PRESS_OUT_XL, 0, 3)
 
-    def __init__(self, i2c_bus, address=_LPS25_DEFAULT_ADDRESS):
+    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=None):
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
-        if not self._chip_id in [_LPS25_CHIP_ID]:
+        if not self._chip_id in [chip_id]:
             raise RuntimeError(
                 "Failed to find LPS2X! Found chip ID 0x%x" % self._chip_id
             )
@@ -217,21 +217,6 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
         self._data_rate = value
 
 
-# /**
-#  * @brief
-#  *
-#  * Allowed values for `setDataRate`.
-#  */
-# typedef enum {
-#   LPS22_RATE_ONE_SHOT,
-#   LPS22_RATE_1_HZ,
-#   LPS22_RATE_10_HZ,
-#   LPS22_RATE_25_HZ,
-#   LPS22_RATE_50_HZ,
-#   LPS22_RATE_75_HZ,
-# } lps22_rate_t;
-
-
 class LPS25(LPS2X):
     """Library for the ST LPS25 pressure sensors
 
@@ -244,7 +229,7 @@ class LPS25(LPS2X):
     enabled = RWBit(_CTRL_REG1, 7)
     """Controls the power down state of the sensor. Setting to `False` will shut the sensor down"""
 
-    def __init__(self, i2c_bus, address=_LPS25_DEFAULT_ADDRESS):
+    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS):
 
         Rate.add_values(
             (
@@ -257,13 +242,60 @@ class LPS25(LPS2X):
             )
         )
 
-        super().__init__(i2c_bus, address)
+        super().__init__(i2c_bus, address, chip_id=_LPS25HB_CHIP_ID)
         self.initialize()
 
     def initialize(self):
         """Configure the sensor with the default settings. For use after calling `reset()`"""
         self.enabled = True
         self.data_rate = Rate.LPS25_RATE_25_HZ  # pylint:disable=no-member
+
+
+class LPS22(LPS2X):
+    """Library for the ST LPS22 pressure sensors
+
+        :param ~busio.I2C i2c_bus: The I2C bus the LPS22HB is connected to.
+        :param address: The I2C device address for the sensor. Default is ``0x5d`` but will accept
+            ``0x5c`` when the ``SDO`` pin is connected to Ground.
+
+    """
+
+    enabled = RWBit(_CTRL_REG1, 7)
+    """Controls the power down state of the sensor. Setting to `False` will shut the sensor down"""
+
+    def __init__(
+        self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=_LPS22HB_CHIP_ID
+    ):
+
+        Rate.add_values(
+            (
+                # leave these for backwards compatibility? nah
+                ("LPS22_RATE_ONE_SHOT", 0, 0, None),
+                ("LPS22_RATE_1_HZ", 1, 1, None),
+                ("LPS22_RATE_10_HZ", 2, 10, None),
+                ("LPS22_RATE_25_HZ", 3, 25, None),
+                ("LPS22_RATE_50_HZ", 4, 50, None),
+                ("LPS22_RATE_75_HZ", 5, 75, None),
+            )
+        )
+
+        # /**
+        #  * @brief
+        #  *
+        #  * Allowed values for `setDataRate`.
+        #  */
+        # typedef enum {
+        #   LPS22_RATE_ONE_SHOT,
+
+        # } lps22_rate_t;
+
+        super().__init__(i2c_bus, address)
+        self.initialize()
+
+    def initialize(self):
+        """Configure the sensor with the default settings. For use after calling `reset()`"""
+        self.enabled = True
+        self.data_rate = Rate.LPS22_RATE_75_HZ  # pylint:disable=no-member
 
 
 # """
