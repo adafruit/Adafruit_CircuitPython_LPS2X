@@ -44,40 +44,41 @@ Implementation Notes
 """
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_LPS2X.git"
+from time import sleep
 from micropython import const
 import adafruit_bus_device.i2c_device as i2cdevice
 from adafruit_register.i2c_struct import ROUnaryStruct
 from adafruit_register.i2c_bits import RWBits, ROBits
 from adafruit_register.i2c_bit import RWBit
 
-_WHO_AM_I = const(0x0F)
-_CTRL_REG1 = const(0x20)
-_CTRL_REG2 = const(0x21)
-_PRESS_OUT_XL = const(0x28 | 0x80)  # | 0x80 to set auto increment on multi-byte read
-_TEMP_OUT_L = const(0x2B | 0x80)  # | 0x80 to set auto increment on multi-byte read
-
-_LPS25HB_CHIP_ID = 0xBD
-_LPS2X_DEFAULT_ADDRESS = 0x5D
-
 # _LPS2X_I2CADDR_DEFAULT = 0x5D # LPS2X default i2c address
 # _LPS2X_WHOAMI = 0x0F          # Chip ID register
+# _LPS2X_PRESS_OUT_XL =(# | 0x80) ///< | 0x80 to set auto increment on multi-byte read
+# _LPS2X_TEMP_OUT_L =  (0x2B # 0x80) ///< | 0x80 to set auto increment on
+_LPS2X_WHO_AM_I = const(0x0F)
+_LPS2X_PRESS_OUT_XL = const(
+    0x28 | 0x80
+)  # | 0x80 to set auto increment on multi-byte read
+_LPS2X_TEMP_OUT_L = const(
+    0x2B | 0x80
+)  # | 0x80 to set auto increment on multi-byte read
 
-_LPS22HB_CHIP_ID = 0xB1  # LPS22 default device id from WHOAMI
-# _LPS22_THS_P_L_REG = 0x0C # Pressure threshold value for int
-# _LPS22_CTRL_REG1 = 0x10   # First control register. Includes BD & ODR
-# _LPS22_CTRL_REG2 = 0x11   # Second control register. Includes SW Reset
-# _LPS22_CTRL_REG3 = 0x12 # Third control register. Includes interrupt polarity
-
-# _LPS25HB_CHIP_ID = 0xBD # LPS25HB default device id from WHOAMI
-# _LPS25_CTRL_REG1 = 0x20 # First control register. Includes BD & ODR
-# _LPS25_CTRL_REG2 = 0x21 # Second control register. Includes SW Reset
+_LPS25_CTRL_REG1 = const(0x20)  # First control register. Includes BD & ODR
+_LPS25_CTRL_REG2 = const(0x21)  # Second control register. Includes SW Reset
 # _LPS25_CTRL_REG3 = 0x22 # Third control register. Includes interrupt polarity
 # _LPS25_CTRL_REG4 = 0x23 # Fourth control register. Includes DRDY INT control
 # _LPS25_INTERRUPT_CFG = 0x24 # Interrupt control register
 # _LPS25_THS_P_L_REG = 0xB0   # Pressure threshold value for int
 
-# _LPS2X_PRESS_OUT_XL =(# | 0x80) ///< | 0x80 to set auto increment on multi-byte read
-# _LPS2X_TEMP_OUT_L =  (0x2B # 0x80) ///< | 0x80 to set auto increment on
+
+# _LPS22_THS_P_L_REG = 0x0C # Pressure threshold value for int
+_LPS22_CTRL_REG1 = 0x10  # First control register. Includes BD & ODR
+_LPS22_CTRL_REG2 = 0x11  # Second control register. Includes SW Reset
+# _LPS22_CTRL_REG3 = 0x12 # Third control register. Includes interrupt polarity
+
+_LPS2X_DEFAULT_ADDRESS = 0x5D
+_LPS25HB_CHIP_ID = 0xBD
+_LPS22HB_CHIP_ID = 0xB1  # LPS22 default device id from WHOAMI
 
 
 class CV:
@@ -124,29 +125,6 @@ class Rate(CV):
     pass  # pylint: disable=unnecessary-pass
 
 
-# typedef enum {
-#   LPS25_RATE_ONE_SHOT,
-#   LPS25_RATE_1_HZ,
-#   LPS25_RATE_7_HZ,
-#   LPS25_RATE_12_5_HZ,
-#   LPS25_RATE_25_HZ,
-# } lps25_rate_t;
-
-# /**
-#  * @brief
-#  *
-#  * Allowed values for `setDataRate`.
-#  */
-# typedef enum {
-#   LPS22_RATE_ONE_SHOT,
-#   LPS22_RATE_1_HZ,
-#   LPS22_RATE_10_HZ,
-#   LPS22_RATE_25_HZ,
-#   LPS22_RATE_50_HZ,
-#   LPS22_RATE_75_HZ,
-# } lps22_rate_t;
-
-
 class LPS2X:  # pylint: disable=too-many-instance-attributes
     """Base class ST LPS2x family of pressure sensors
 
@@ -156,11 +134,9 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    _chip_id = ROUnaryStruct(_WHO_AM_I, "<B")
-    _reset = RWBit(_CTRL_REG2, 2)
-    _data_rate = RWBits(3, _CTRL_REG1, 4)
-    _raw_temperature = ROUnaryStruct(_TEMP_OUT_L, "<h")
-    _raw_pressure = ROBits(24, _PRESS_OUT_XL, 0, 3)
+    _chip_id = ROUnaryStruct(_LPS2X_WHO_AM_I, "<B")
+    _raw_temperature = ROUnaryStruct(_LPS2X_TEMP_OUT_L, "<h")
+    _raw_pressure = ROBits(24, _LPS2X_PRESS_OUT_XL, 0, 3)
 
     def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=None):
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
@@ -171,6 +147,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
         self.reset()
         self.initialize()
+        sleep(0.010)  # delay 10ms for first reading
 
     def initialize(self):  # pylint: disable=no-self-use
         """Configure the sensor with the default settings. For use after calling `reset()`"""
@@ -198,7 +175,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     def temperature(self):
         """The current temperature measurement in degrees C"""
         raw_temperature = self._raw_temperature
-        return (raw_temperature / 480) + 42.5
+        return (raw_temperature / self._temp_scaling) + 42.5  # pylint:disable=no-member
 
     @property
     def data_rate(self):
@@ -216,6 +193,9 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
         self._data_rate = value
 
+    #   void setPresThreshold(uint16_t hPa_delta);
+    #   bool getEvent(sensors_event_t *pressure, sensors_event_t *temp);
+
 
 class LPS25(LPS2X):
     """Library for the ST LPS25 pressure sensors
@@ -226,14 +206,15 @@ class LPS25(LPS2X):
 
     """
 
-    enabled = RWBit(_CTRL_REG1, 7)
+    enabled = RWBit(_LPS25_CTRL_REG1, 7)
     """Controls the power down state of the sensor. Setting to `False` will shut the sensor down"""
+    _reset = RWBit(_LPS25_CTRL_REG2, 2)
+    _data_rate = RWBits(3, _LPS25_CTRL_REG1, 4)
 
     def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS):
 
         Rate.add_values(
             (
-                # leave these for backwards compatibility? nah
                 ("LPS25_RATE_ONE_SHOT", 0, 0, None),
                 ("LPS25_RATE_1_HZ", 1, 1, None),
                 ("LPS25_RATE_7_HZ", 2, 7, None),
@@ -243,12 +224,17 @@ class LPS25(LPS2X):
         )
 
         super().__init__(i2c_bus, address, chip_id=_LPS25HB_CHIP_ID)
-        self.initialize()
+
+        self._temp_scaling = 480
+        # self._inc_spi_flag = 0x40
 
     def initialize(self):
         """Configure the sensor with the default settings. For use after calling `reset()`"""
         self.enabled = True
         self.data_rate = Rate.LPS25_RATE_25_HZ  # pylint:disable=no-member
+
+    # void configureInterrupt(bool activelow, bool opendrain,
+    #                       bool pres_high = false, bool pres_low = false);
 
 
 class LPS22(LPS2X):
@@ -260,16 +246,15 @@ class LPS22(LPS2X):
 
     """
 
-    enabled = RWBit(_CTRL_REG1, 7)
-    """Controls the power down state of the sensor. Setting to `False` will shut the sensor down"""
+    _reset = RWBit(_LPS22_CTRL_REG2, 2)
+    _data_rate = RWBits(3, _LPS22_CTRL_REG1, 4)
 
     def __init__(
         self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=_LPS22HB_CHIP_ID
     ):
-
+        # Only adding Class-appropriate rates
         Rate.add_values(
             (
-                # leave these for backwards compatibility? nah
                 ("LPS22_RATE_ONE_SHOT", 0, 0, None),
                 ("LPS22_RATE_1_HZ", 1, 1, None),
                 ("LPS22_RATE_10_HZ", 2, 10, None),
@@ -279,106 +264,15 @@ class LPS22(LPS2X):
             )
         )
 
-        # /**
-        #  * @brief
-        #  *
-        #  * Allowed values for `setDataRate`.
-        #  */
-        # typedef enum {
-        #   LPS22_RATE_ONE_SHOT,
-
-        # } lps22_rate_t;
-
         super().__init__(i2c_bus, address)
-        self.initialize()
+        self._temp_scaling = 100
 
     def initialize(self):
         """Configure the sensor with the default settings. For use after calling `reset()`"""
-        self.enabled = True
+        # self.enabled = True
         self.data_rate = Rate.LPS22_RATE_75_HZ  # pylint:disable=no-member
 
-
-# """
-#  class Adafruit_LPS2X {
-# public:
-#   Adafruit_LPS2X();
-#   ~Adafruit_LPS2X();
-
-#   bool begin_I2C(uint8_t i2c_addr = LPS2X_I2CADDR_DEFAULT,
-#                  TwoWire *wire = &Wire, int32_t sensor_id = 0);
-
-#   bool begin_SPI(uint8_t cs_pin, SPIClass *theSPI = &SPI,
-#                  int32_t sensor_id = 0);
-#   bool begin_SPI(int8_t cs_pin, int8_t sck_pin, int8_t miso_pin,
-#                  int8_t mosi_pin, int32_t sensor_id = 0);
-
-#   void setPresThreshold(uint16_t hPa_delta);
-#   bool getEvent(sensors_event_t *pressure, sensors_event_t *temp);
-#   void reset(void);
-
-#   Adafruit_Sensor *getTemperatureSensor(void);
-#   Adafruit_Sensor *getPressureSensor(void);
-
-# protected:
-#   /**! @brief The subclasses' hardware initialization function
-#      @param sensor_id The unique sensor id we want to assign it
-#      @returns True on success, false if something went wrong! **/
-#   virtual bool _init(int32_t sensor_id) = 0;
-
-#   void _read(void);
-
-#   float _temp,   ///< Last reading's temperature (C)
-#       _pressure; ///< Last reading's pressure (hPa)
-
-#   uint16_t _sensorid_pressure, ///< ID number for pressure
-#       _sensorid_temp;          ///< ID number for temperature
-#   float temp_scaling = 1;      ///< Different chips have different scalings
-#   uint8_t inc_spi_flag =
-#       0; ///< If this chip has a bitflag for incrementing SPI registers
-
-
-#   Adafruit_BusIO_Register *ctrl1_reg = NULL;   ///< The first control register
-#   Adafruit_BusIO_Register *ctrl2_reg = NULL;   ///< The second control register
-#   Adafruit_BusIO_Register *ctrl3_reg = NULL;   ///< The third control register
-#   Adafruit_BusIO_Register *threshp_reg = NULL; ///< Pressure threshold
-
-# private:
-#   friend class Adafruit_LPS2X_Temp;     ///< Gives access to private members to
-#                                         ///< Temp data object
-#   friend class Adafruit_LPS2X_Pressure; ///< Gives access to private
-#                                         ///< members to Pressure data
-#                                         ///< object
-
-
-# };
-
-# /** Specific subclass for LPS25 variant */
-# class Adafruit_LPS25 : public Adafruit_LPS2X {
-# public:
-#   lps25_rate_t getDataRate(void);
-#   void setDataRate(lps25_rate_t data_rate);
-#   void powerDown(bool power_down);
-#   void configureInterrupt(bool activelow, bool opendrain,
-#                           bool pres_high = false, bool pres_low = false);
-
-# protected:
-#   bool _init(int32_t sensor_id);
-# };
-
-# /** Specific subclass for LPS22 variant */
-# class Adafruit_LPS22 : public Adafruit_LPS2X {
-# public:
-#   lps22_rate_t getDataRate(void);
-#   void setDataRate(lps22_rate_t data_rate);
-#   void configureInterrupt(bool activelow, bool opendrain, bool data_ready,
-#                           bool pres_high = false, bool pres_low = false,
-#                           bool fifo_full = false, bool fifo_watermark = false,
-#                           bool fifo_overflow = false);
-
-# protected:
-#   bool _init(int32_t sensor_id);
-# };
-
-# #endif
-
-# """
+    # void configureInterrupt(bool activelow, bool opendrain, bool data_ready,
+    #                         bool pres_high = false, bool pres_low = false,
+    #                         bool fifo_full = false, bool fifo_watermark = false,
+    #                         bool fifo_overflow = false);
