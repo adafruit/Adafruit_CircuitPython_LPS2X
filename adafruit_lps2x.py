@@ -33,7 +33,7 @@ Implementation Notes
 
 **Hardware:**
 
-* `LPS25HB Breakout <https://www.adafruit.com/products/45XX>`_
+* LPS25HB Breakout https://www.adafruit.com/products/4530
 
 **Software and Dependencies:**
  * Adafruit CircuitPython firmware for the supported boards:
@@ -105,20 +105,31 @@ class CV:
 class Rate(CV):
     """Options for ``data_rate``
 
-    +-----------------------+------------------------------------------------------------------+
-    | Rate                  | Description                                                      |
-    +-----------------------+------------------------------------------------------------------+
-    | ``Rate.ONE_SHOT``     | Setting `data_rate` to ``Rate.ONE_SHOT`` takes a single pressure |
-    |                       | and temperature measurement                                      |
-    +-----------------------+------------------------------------------------------------------+
-    | ``Rate.RATE_1_HZ``    | 1 Hz                                                             |
-    +-----------------------+------------------------------------------------------------------+
-    | ``Rate.RATE_7_HZ``    | 7 Hz                                                             |
-    +-----------------------+------------------------------------------------------------------+
-    | ``Rate.RATE_12_5_HZ`` | 12.5 Hz                                                          |
-    +-----------------------+------------------------------------------------------------------+
-    | ``Rate.RATE_25_HZ``   | 25 Hz                                                            |
-    +-----------------------+------------------------------------------------------------------+
+    +-----------------------------+------------------------------------------------+
+    | Rate                        | Description                                    |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP25_SHUTDOWN``     | Setting `data_rate` to ``Rate.LSP25_SHUTDOWN`` |
+    |                             | stops measurements from being taken            |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP25_RATE_1_HZ``    | 1 Hz                                           |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP25_RATE_7_HZ``    | 7 Hz                                           |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP25_RATE_12_5_HZ`` | 12.5 Hz                                        |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP25_RATE_25_HZ``   | 25 Hz                                          |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP22_SHUTDOWN``     | Setting `data_rate` to ``Rate.LSP22_SHUTDOWN`` |
+    |                             | stops measurements from being taken            |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP22_RATE_1_HZ``    | 1 Hz                                           |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP22_RATE_10_HZ``   | 10 Hz                                          |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP22_RATE_25_HZ``   | 25 Hz                                          |
+    +-----------------------------+------------------------------------------------+
+    | ``Rate.LSP22_RATE_50_HZ``   | 50 Hz                                          |
+    +-----------------------------+------------------------------------------------+
 
     """
 
@@ -182,10 +193,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     @property
     def data_rate(self):
         """The rate at which the sensor measures ``pressure`` and ``temperature``. ``data_rate``
-        shouldbe set to one of the values of ``adafruit_lps2x.DataRate``. Note that setting
-        ``data_rate``to ``Rate.ONE_SHOT`` places the sensor into a low-power shutdown mode where
-        measurements toupdate ``pressure`` and ``temperature`` are only taken when
-        ``take_measurement`` is called."""
+        shouldbe set to one of the values of ``adafruit_lps2x.Rate``."""
         return self._data_rate
 
     @data_rate.setter
@@ -194,9 +202,6 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
             raise AttributeError("data_rate must be a `Rate`")
 
         self._data_rate = value
-
-    #   void setPresThreshold(uint16_t hPa_delta);
-    #   bool getEvent(sensors_event_t *pressure, sensors_event_t *temp);
 
 
 class LPS25(LPS2X):
