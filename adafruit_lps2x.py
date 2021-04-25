@@ -15,13 +15,20 @@ Implementation Notes
 
 **Hardware:**
 
-* LPS25HB Breakout https://www.adafruit.com/products/4530
+* Adafruit `LPS25 Pressure SensorLPS25HB Breakout
+  <https://www.adafruit.com/product/4530>`_ (Product ID: 4530)
+
+* Adafruit `LPS22 Pressure Sensor LPS22HB Breakout
+  <https://www.adafruit.com/product/4633>`_ (Product ID: 4633)
 
 **Software and Dependencies:**
- * Adafruit CircuitPython firmware for the supported boards:
+
+* Adafruit CircuitPython firmware for the supported boards:
     https://circuitpythohn.org/downloads
- * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
- * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
+
+* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+
+* Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 
 """
 __version__ = "0.0.0-auto.0"
@@ -68,7 +75,7 @@ class CV:
 
     @classmethod
     def add_values(cls, value_tuples):
-        "creates CV entires"
+        """creates CV entries"""
         cls.string = {}
         cls.lsb = {}
 
@@ -80,7 +87,7 @@ class CV:
 
     @classmethod
     def is_valid(cls, value):
-        "Returns true if the given value is a member of the CV"
+        """Returns true if the given value is a member of the CV"""
         return value in cls.string
 
 
@@ -122,8 +129,9 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     """Base class ST LPS2x family of pressure sensors
 
     :param ~busio.I2C i2c_bus: The I2C bus the sensor is connected to.
-    :param address: The I2C device address for the sensor. Default is ``0x5d`` but will accept
-        ``0x5c`` when the ``SDO`` pin is connected to Ground.
+    :param int address: The I2C device address for the sensor.
+                        Default is :const:`0x5d` but will accept :const:`0x5c` when
+                        the ``SDO`` pin is connected to Ground.
 
     """
 
@@ -142,7 +150,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
         sleep(0.010)  # delay 10ms for first reading
 
     def initialize(self):  # pylint: disable=no-self-use
-        """Configure the sensor with the default settings. For use after calling `reset()`"""
+        """Configure the sensor with the default settings. For use after calling :meth:`reset`"""
         raise RuntimeError(
             "LPS2X Base class cannot be instantiated directly. Use LPS22 or LPS25 instead"
         )  # override in subclass
@@ -165,7 +173,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
     @property
     def temperature(self):
-        """The current temperature measurement in degrees C"""
+        """The current temperature measurement in degrees Celsius"""
 
         raw_temperature = self._raw_temperature
         return (
@@ -174,8 +182,9 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
     @property
     def data_rate(self):
-        """The rate at which the sensor measures ``pressure`` and ``temperature``. ``data_rate``
-        shouldbe set to one of the values of ``adafruit_lps2x.Rate``."""
+        """The rate at which the sensor measures :attr:`pressure` and
+        :attr:`temperature`. :attr:`data_rate` should be set to one of
+        the values of :class:`adafruit_lps2x.Rate`"""
         return self._data_rate
 
     @data_rate.setter
@@ -190,8 +199,8 @@ class LPS25(LPS2X):
     """Library for the ST LPS25 pressure sensors
 
     :param ~busio.I2C i2c_bus: The I2C bus the LPS25HB is connected to.
-    :param address: The I2C device address for the sensor. Default is ``0x5d`` but will accept
-        ``0x5c`` when the ``SDO`` pin is connected to Ground.
+    :param int address: The I2C device address. Default is :const:`0x5d` but will accept
+        :const:`0x5c` when the ``SDO`` pin is connected to Ground.
 
     """
 
@@ -218,7 +227,9 @@ class LPS25(LPS2X):
         # self._inc_spi_flag = 0x40
 
     def initialize(self):
-        """Configure the sensor with the default settings. For use after calling `reset()`"""
+        """Configure the sensor with the default settings.
+        For use after calling :func:`LPS2X.reset`
+        """
         self.enabled = True
         self.data_rate = Rate.LPS25_RATE_25_HZ  # pylint:disable=no-member
 
@@ -230,8 +241,8 @@ class LPS22(LPS2X):
     """Library for the ST LPS22 pressure sensors
 
     :param ~busio.I2C i2c_bus: The I2C bus the LPS22HB is connected to.
-    :param address: The I2C device address for the sensor. Default is ``0x5d`` but will accept
-        ``0x5c`` when the ``SDO`` pin is connected to Ground.
+    :param address: The I2C device address. Default is :const:`0x5d` but will accept
+        :const:`0x5c` when the ``SDO`` pin is connected to Ground.
 
     """
 
@@ -256,7 +267,9 @@ class LPS22(LPS2X):
         self._temp_offset = 0
 
     def initialize(self):
-        """Configure the sensor with the default settings. For use after calling `reset()`"""
+        """Configure the sensor with the default settings.
+        For use after calling :func:`LPS2X.reset`
+        """
         self.data_rate = Rate.LPS22_RATE_75_HZ  # pylint:disable=no-member
 
     # void configureInterrupt(bool activelow, bool opendrain, bool data_ready,

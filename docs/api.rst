@@ -6,3 +6,5 @@
 
 .. automodule:: adafruit_lps2x
    :members:
+   :member-order: bysource
+   :exclude-members: CV
