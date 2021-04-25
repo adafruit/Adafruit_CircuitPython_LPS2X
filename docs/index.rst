@@ -23,11 +23,14 @@ Table of Contents
 .. toctree::
     :caption: Tutorials
 
+    Adafruit LPS2X Pressure Sensor Learning Guide <https://learn.adafruit.com/adafruit-lps25-pressure-sensor>
 
 .. toctree::
     :caption: Related Products
 
-    * LPS25HW Breakout <https://www.adafruit.com/products/4258>
+    Adafruit LPS22 Pressure Sensor <https://www.adafruit.com/product/4633>
+
+    Adafruit LPS25 Pressure Sensor <https://www.adafruit.com/products/4258>
 
 .. toctree::
     :caption: Other Links
