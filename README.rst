@@ -70,6 +70,11 @@ Usage Example
         print("Temperature: %.2f C" % lps.temperature)
         time.sleep(1)
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/lps2x/en/latest/>`_.
+
 Contributing
 ============
 
