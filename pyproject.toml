@@ -12,7 +12,7 @@ requires = [
 [project]
 name = "adafruit-circuitpython-lps2x"
 description = "Library for the ST LPS2x family of pressure sensors"
-version = "0.0.0-auto.0"
+version = "0.0.0+auto.0"
 readme = "README.rst"
 authors = [
     {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
