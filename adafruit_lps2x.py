@@ -41,7 +41,7 @@ from adafruit_register.i2c_bits import RWBits, ROBits
 from adafruit_register.i2c_bit import RWBit
 
 try:
-    from typing import Optional, Tuple, Union
+    from typing import Iterable, Optional, Tuple
     from typing_extensions import Literal
     from busio import I2C
 except ImportError:
@@ -81,7 +81,9 @@ class CV:
     """struct helper"""
 
     @classmethod
-    def add_values(cls, value_tuples: Tuple[str, int, float, Union[str, None]]) -> None:
+    def add_values(
+        cls, value_tuples: Iterable[Tuple[str, int, Optional[float], Optional[float]]]
+    ) -> None:
         """creates CV entries"""
         cls.string = {}
         cls.lsb = {}
@@ -149,8 +151,8 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         i2c_bus: I2C,
-        address: Literal[0x5C, 0x5D] = _LPS2X_DEFAULT_ADDRESS,
-        chip_id: Optional[Literal[0xB1, 0xBD]] = None,
+        address: int = _LPS2X_DEFAULT_ADDRESS,
+        chip_id: Optional[int] = None,
     ) -> None:
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
         if not self._chip_id in [chip_id]:
