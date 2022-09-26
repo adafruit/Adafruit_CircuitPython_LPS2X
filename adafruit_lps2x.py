@@ -95,7 +95,7 @@ class CV:
             cls.lsb[value] = lsb
 
     @classmethod
-    def is_valid(cls, value) -> bool:
+    def is_valid(cls, value: int) -> bool:
         """Returns true if the given value is a member of the CV"""
         return value in cls.string
 
