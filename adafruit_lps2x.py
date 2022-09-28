@@ -149,11 +149,10 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     _raw_pressure = ROBits(24, _LPS2X_PRESS_OUT_XL, 0, 3)
 
     def __init__(
-        self,
-        i2c_bus: I2C,
-        address: int = _LPS2X_DEFAULT_ADDRESS,
-        chip_id: Optional[int] = None,
+        self, i2c_bus: I2C, address: int = _LPS2X_DEFAULT_ADDRESS, chip_id: int = -1
     ) -> None:
+        if chip_id == -1:
+            raise ValueError("Must set the chip_id argument")
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
         if not self._chip_id in [chip_id]:
             raise RuntimeError(
@@ -223,9 +222,7 @@ class LPS25(LPS2X):
     _reset = RWBit(_LPS25_CTRL_REG2, 2)
     _data_rate = RWBits(3, _LPS25_CTRL_REG1, 4)
 
-    def __init__(
-        self, i2c_bus: I2C, address: Literal[0x5C, 0x5D] = _LPS2X_DEFAULT_ADDRESS
-    ) -> None:
+    def __init__(self, i2c_bus: I2C, address: int = _LPS2X_DEFAULT_ADDRESS) -> None:
 
         Rate.add_values(
             (
