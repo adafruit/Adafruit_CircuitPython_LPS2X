@@ -40,6 +40,13 @@ from adafruit_register.i2c_struct import ROUnaryStruct
 from adafruit_register.i2c_bits import RWBits, ROBits
 from adafruit_register.i2c_bit import RWBit
 
+try:
+    from typing import Iterable, Optional, Tuple
+    from typing_extensions import Literal
+    from busio import I2C
+except ImportError:
+    pass
+
 # _LPS2X_I2CADDR_DEFAULT = 0x5D # LPS2X default i2c address
 # _LPS2X_WHOAMI = 0x0F          # Chip ID register
 # _LPS2X_PRESS_OUT_XL =(# | 0x80) ///< | 0x80 to set auto increment on multi-byte read
@@ -74,7 +81,9 @@ class CV:
     """struct helper"""
 
     @classmethod
-    def add_values(cls, value_tuples):
+    def add_values(
+        cls, value_tuples: Iterable[Tuple[str, int, Optional[float], Optional[float]]]
+    ) -> None:
         """creates CV entries"""
         cls.string = {}
         cls.lsb = {}
@@ -86,7 +95,7 @@ class CV:
             cls.lsb[value] = lsb
 
     @classmethod
-    def is_valid(cls, value):
+    def is_valid(cls, value: int) -> bool:
         """Returns true if the given value is a member of the CV"""
         return value in cls.string
 
@@ -139,23 +148,27 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
     _raw_temperature = ROUnaryStruct(_LPS2X_TEMP_OUT_L, "<h")
     _raw_pressure = ROBits(24, _LPS2X_PRESS_OUT_XL, 0, 3)
 
-    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS, chip_id=None):
+    def __init__(
+        self, i2c_bus: I2C, address: int = _LPS2X_DEFAULT_ADDRESS, chip_id: int = -1
+    ) -> None:
+        if chip_id == -1:
+            raise ValueError("Must set the chip_id argument")
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
         if not self._chip_id in [chip_id]:
             raise RuntimeError(
-                "Failed to find LPS2X! Found chip ID 0x%x" % self._chip_id
+                f"Failed to find LPS2X! Found chip ID {hex(self._chip_id)}"
             )
         self.reset()
         self.initialize()
         sleep(0.010)  # delay 10ms for first reading
 
-    def initialize(self):  # pylint: disable=no-self-use
+    def initialize(self) -> None:  # pylint: disable=no-self-use
         """Configure the sensor with the default settings. For use after calling :meth:`reset`"""
         raise RuntimeError(
             "LPS2X Base class cannot be instantiated directly. Use LPS22 or LPS25 instead"
         )  # override in subclass
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the sensor, restoring all configuration registers to their defaults"""
         self._reset = True
         # wait for the reset to finish
@@ -163,7 +176,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
             pass
 
     @property
-    def pressure(self):
+    def pressure(self) -> float:
         """The current pressure measurement in hPa"""
         raw = self._raw_pressure
 
@@ -172,7 +185,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
         return raw / 4096.0
 
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         """The current temperature measurement in degrees Celsius"""
 
         raw_temperature = self._raw_temperature
@@ -181,14 +194,14 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
         ) + self._temp_offset  # pylint:disable=no-member
 
     @property
-    def data_rate(self):
+    def data_rate(self) -> int:
         """The rate at which the sensor measures :attr:`pressure` and
         :attr:`temperature`. :attr:`data_rate` should be set to one of
         the values of :class:`adafruit_lps2x.Rate`"""
         return self._data_rate
 
     @data_rate.setter
-    def data_rate(self, value):
+    def data_rate(self, value: int) -> None:
         if not Rate.is_valid(value):
             raise AttributeError("data_rate must be a `Rate`")
 
@@ -209,7 +222,7 @@ class LPS25(LPS2X):
     _reset = RWBit(_LPS25_CTRL_REG2, 2)
     _data_rate = RWBits(3, _LPS25_CTRL_REG1, 4)
 
-    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS):
+    def __init__(self, i2c_bus: I2C, address: int = _LPS2X_DEFAULT_ADDRESS) -> None:
 
         Rate.add_values(
             (
@@ -226,7 +239,7 @@ class LPS25(LPS2X):
         self._temp_offset = 42.5
         # self._inc_spi_flag = 0x40
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Configure the sensor with the default settings.
         For use after calling :func:`LPS2X.reset`
         """
@@ -249,7 +262,9 @@ class LPS22(LPS2X):
     _reset = RWBit(_LPS22_CTRL_REG2, 2)
     _data_rate = RWBits(3, _LPS22_CTRL_REG1, 4)
 
-    def __init__(self, i2c_bus, address=_LPS2X_DEFAULT_ADDRESS):
+    def __init__(
+        self, i2c_bus: I2C, address: Literal[0x5C, 0x5D] = _LPS2X_DEFAULT_ADDRESS
+    ) -> None:
         # Only adding Class-appropriate rates
         Rate.add_values(
             (
@@ -266,7 +281,7 @@ class LPS22(LPS2X):
         self._temp_scaling = 100
         self._temp_offset = 0
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Configure the sensor with the default settings.
         For use after calling :func:`LPS2X.reset`
         """
