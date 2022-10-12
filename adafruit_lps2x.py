@@ -131,8 +131,6 @@ class Rate(CV):
 
     """
 
-    pass  # pylint: disable=unnecessary-pass
-
 
 class LPS2X:  # pylint: disable=too-many-instance-attributes
     """Base class ST LPS2x family of pressure sensors
@@ -164,7 +162,7 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
 
     def initialize(self) -> None:  # pylint: disable=no-self-use
         """Configure the sensor with the default settings. For use after calling :meth:`reset`"""
-        raise RuntimeError(
+        raise NotImplementedError(
             "LPS2X Base class cannot be instantiated directly. Use LPS22 or LPS25 instead"
         )  # override in subclass
 
