@@ -221,7 +221,6 @@ class LPS25(LPS2X):
     _data_rate = RWBits(3, _LPS25_CTRL_REG1, 4)
 
     def __init__(self, i2c_bus: I2C, address: int = _LPS2X_DEFAULT_ADDRESS) -> None:
-
         Rate.add_values(
             (
                 ("LPS25_RATE_ONE_SHOT", 0, 0, None),
