@@ -24,7 +24,7 @@ Implementation Notes
 **Software and Dependencies:**
 
 * Adafruit CircuitPython firmware for the supported boards:
-    https://circuitpythohn.org/downloads
+    https://circuitpython.org/downloads
 
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 
