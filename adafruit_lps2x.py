@@ -31,19 +31,22 @@ Implementation Notes
 * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 
 """
+
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_LPS2X.git"
 from time import sleep
-from micropython import const
+
 import adafruit_bus_device.i2c_device as i2cdevice
-from adafruit_register.i2c_struct import ROUnaryStruct
-from adafruit_register.i2c_bits import RWBits, ROBits
 from adafruit_register.i2c_bit import RWBit
+from adafruit_register.i2c_bits import ROBits, RWBits
+from adafruit_register.i2c_struct import ROUnaryStruct
+from micropython import const
 
 try:
     from typing import Iterable, Optional, Tuple
-    from typing_extensions import Literal
+
     from busio import I2C
+    from typing_extensions import Literal
 except ImportError:
     pass
 
@@ -52,12 +55,8 @@ except ImportError:
 # _LPS2X_PRESS_OUT_XL =(# | 0x80) ///< | 0x80 to set auto increment on multi-byte read
 # _LPS2X_TEMP_OUT_L =  (0x2B # 0x80) ///< | 0x80 to set auto increment on
 _LPS2X_WHO_AM_I = const(0x0F)
-_LPS2X_PRESS_OUT_XL = const(
-    0x28 | 0x80
-)  # | 0x80 to set auto increment on multi-byte read
-_LPS2X_TEMP_OUT_L = const(
-    0x2B | 0x80
-)  # | 0x80 to set auto increment on multi-byte read
+_LPS2X_PRESS_OUT_XL = const(0x28 | 0x80)  # | 0x80 to set auto increment on multi-byte read
+_LPS2X_TEMP_OUT_L = const(0x2B | 0x80)  # | 0x80 to set auto increment on multi-byte read
 
 _LPS25_CTRL_REG1 = const(0x20)  # First control register. Includes BD & ODR
 _LPS25_CTRL_REG2 = const(0x21)  # Second control register. Includes SW Reset
@@ -135,7 +134,7 @@ class Rate(CV):
     """
 
 
-class LPS2X:  # pylint: disable=too-many-instance-attributes
+class LPS2X:
     """Base class ST LPS2x family of pressure sensors
 
     :param ~busio.I2C i2c_bus: The I2C bus the sensor is connected to.
@@ -155,15 +154,13 @@ class LPS2X:  # pylint: disable=too-many-instance-attributes
         if chip_id == -1:
             raise ValueError("Must set the chip_id argument")
         self.i2c_device = i2cdevice.I2CDevice(i2c_bus, address)
-        if not self._chip_id in [chip_id]:
-            raise RuntimeError(
-                f"Failed to find LPS2X! Found chip ID {hex(self._chip_id)}"
-            )
+        if self._chip_id not in {chip_id}:
+            raise RuntimeError(f"Failed to find LPS2X! Found chip ID {hex(self._chip_id)}")
         self.reset()
         self.initialize()
         sleep(0.010)  # delay 10ms for first reading
 
-    def initialize(self) -> None:  # pylint: disable=no-self-use
+    def initialize(self) -> None:
         """Configure the sensor with the default settings. For use after calling :meth:`reset`"""
         raise NotImplementedError(
             "LPS2X Base class cannot be instantiated directly. Use LPS22 or LPS25 instead"
@@ -262,9 +259,7 @@ class LPS22(LPS2X):
     _reset = RWBit(_LPS22_CTRL_REG2, 2)
     _data_rate = RWBits(3, _LPS22_CTRL_REG1, 4)
 
-    def __init__(
-        self, i2c_bus: I2C, address: Literal[0x5C, 0x5D] = _LPS2X_DEFAULT_ADDRESS
-    ) -> None:
+    def __init__(self, i2c_bus: I2C, address: Literal[0x5C, 0x5D] = _LPS2X_DEFAULT_ADDRESS) -> None:
         # Only adding Class-appropriate rates
         Rate.add_values(
             (
