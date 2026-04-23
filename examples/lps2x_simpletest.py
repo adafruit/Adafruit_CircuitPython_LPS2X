@@ -14,6 +14,6 @@ i2c = board.I2C()  # uses board.SCL and board.SDA
 lps = adafruit_lps2x.LPS25(i2c)
 
 while True:
-    print("Pressure: %.2f hPa" % lps.pressure)
-    print("Temperature: %.2f C" % lps.temperature)
+    print(f"Pressure: {lps.pressure:.2f} hPa")
+    print(f"Temperature: {lps.temperature:.2f} C")
     time.sleep(1)
